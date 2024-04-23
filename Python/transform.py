@@ -5,25 +5,6 @@ import seaborn as sns
 import cv2
 
 
-# def project(df):
-#     return_df = pd.DataFrame(columns=["x", "y", "z"])
-
-#     for index, row in df.iterrows():
-#         x = row["controller_right_pos.x"]
-#         y = row["controller_right_pos.y"]
-#         z = row["controller_right_pos.z"]
-#         time  = row["time"]
-
-#         p = Point3D(x,y,z)
-
-#         plane = Plane(Point3D(1, 1, 0), normal_vector =(0, 0, 1)) 
-#         projection = plane.projection(p) 
-#         return_df.loc[index] = [projection.x, projection.y, projection.z]
-
-
-
-#     return return_df
-
 def scale(matrix):
     # Get the minimum and maximum values along each axis
     min_x = 0
@@ -80,10 +61,12 @@ def scale(matrix):
 
     return scaled_matrix
 
-def matrix(file_name):
-    df = pd.read_csv(file_name, index_col=False)
+
+
+def matrix(df):
+    # df = pd.read_csv(file_name, index_col=False)
     # df = project(df)
-    print(df)
+    # print(df)
 
 
 
@@ -167,45 +150,12 @@ def bounding(A):
     print(bounding_boxes)
     return bounding_boxes
 
-# import os
-# print(os.getcwd())
-# adjust = matrix('ARC_01.csv')
-# boxes = bounding(adjust)
 
-# adjusted_1 = adjust[boxes[0][2]:(boxes[0][3]+1), boxes[0][0]:(boxes[0][1]+1)]
-# plt.figure(figsize=(15, 8))
-# sns.heatmap(adjusted_1, annot=True, cmap='gray', cbar=False)
-# plt.xticks(range(adjusted_1.shape[1]))
-# plt.yticks(range(adjusted_1.shape[0]))
-# plt.grid(True)
-# plt.show()
-# adjusted_2 = adjust[boxes[1][2]:(boxes[1][3]+1), boxes[1][0]:(boxes[1][1]+1)]
-# adjusted_2.resize(28, 28)
-# plt.figure(figsize=(15, 8))
-# sns.heatmap(adjusted_2, annot=True, cmap='gray', cbar=False)
-# plt.xticks(range(adjusted_2.shape[1]))
-# plt.yticks(range(adjusted_2.shape[0]))
-# plt.grid(True)
-# plt.show()
-# scale(adjusted_1)
-# scale(adjusted_2)
-
-
-# transformed_image = np.expand_dims(adjust, axis=0)  # Add batch dimension
-# transformed_image = np.expand_dims(transformed_image, axis=-1)  # Add channel dimension
-
-# print("Transformed shape:", transformed_image.shape)
-
-
-def main():
-    adjust = matrix('ARC_01.csv')
+def main(df):
+    adjust = matrix(df)
     boxes = bounding(adjust)
     predictions = []
     for i, bound in enumerate(boxes):
         adjusted = adjust[bound[2]:(bound[3] + 1),bound[0]:(bound[1] + 1)]
         scaled = scale(adjusted)
-
-        # call model.predict 
-        # val = model.predict(scaled)
-        # predictions.append(val)
 
