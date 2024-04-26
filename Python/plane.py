@@ -36,7 +36,7 @@ fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
 # Original points
-ax.scatter(A_points_noisy[:, 0], A_points_noisy[:, 1], A_points_noisy[:, 2], color='r', label='Noisy Rotated "A" Points')
+ax.scatter(A_points_noisy[:, 0], A_points_noisy[:, 1], A_points_noisy[:, 2], color='r', label='Example Drawing')
 
 # Plane
 ax.plot_surface(plane_points[:, :, 0], plane_points[:, :, 1], plane_points[:, :, 2], alpha=0.5, rstride=1, cstride=1, color='b', edgecolor='none')
@@ -47,7 +47,7 @@ ax.set_zlim([-3, 3])
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
 ax.set_zlabel('Z')
-ax.set_title('I Love Jay')
+ax.set_title('PCA Demo')
 
 ax.legend()
 plt.show()
