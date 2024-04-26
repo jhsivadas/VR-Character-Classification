@@ -13,11 +13,14 @@ public class AWS : MonoBehaviour
 {
     private string bucketName = "digits-vr";
     private string keyName = "HOLYCOW.csv";
-    private string filePath = "/Users/max/Desktop/VR-Character-Classification/API Tests/Assets/HOLYCOW.csv";
-    private string awsCredentialsPath = "/Users/max/Desktop/VR-Character-Classification/API Tests/Assets/aws_credentials.json"; // Path to your aws_credentials.json file
+    private string filePath;
+    private string awsCredentialsPath;
 
     void Start()
     {
+        filePath = Path.Combine(Application.dataPath, "HOLYCOW.csv");
+        awsCredentialsPath = Path.Combine(Application.dataPath, "aws_credentials.json");    
+
         UploadFile();
     }
 
