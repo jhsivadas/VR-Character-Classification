@@ -9,6 +9,8 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.layers import Dropout, BatchNormalization, Conv2D, Activation, MaxPool2D, Flatten, Dense, LeakyReLU
 from tensorflow.keras.models import Sequential
 import os
+import pickle
+from tensorflow.keras.models import model_from_json
 
 
 
@@ -98,4 +100,16 @@ test_loss, test_acc = model.evaluate(test_images, test_labels)
 print(f"Test accuracy: {test_acc}")
 
 
+model.save("emnist.keras")
 
+# # convert 
+# model_json = model.to_json()
+# with open("model.json", "w") as json_file:
+#     json_file.write(model_json)
+
+# # Save the model weights to a HDF5 file
+# model.save_weights("model.h5")
+
+
+# with open("model.pkl", "wb") as f:
+#     pickle.dump(model, f)
