@@ -18,9 +18,6 @@ public class AWS : MonoBehaviour
 
     void Start()
     {
-        filePath = Path.Combine(Application.dataPath, keyName);
-        awsCredentialsPath = Path.Combine(Application.dataPath, "aws_credentials.json");    
-
         UploadFile();
     }
 
