@@ -36,8 +36,8 @@ columns = ['label'] + list(range(1, num_columns))
 parent_dir = os.path.abspath(os.path.join(os.getcwd(), os.path.pardir))
 
 # Read the training and testing datasets
-ds_train = pd.read_csv(parent_dir + "/Data/emnist/emnist-byclass-train.csv", header=None)
-ds_test = pd.read_csv(parent_dir + "/Data/emnist/emnist-byclass-test.csv", header=None)
+ds_train = pd.read_csv(parent_dir + "/Data/emnist-bymerge-train.csv", header=None)
+ds_test = pd.read_csv(parent_dir + "/Data/emnist-bymerge-test.csv", header=None)
 
 # Assign column names to the DataFrames
 ds_train.columns = columns
@@ -60,27 +60,27 @@ test_images = ds_test.drop(['label'], axis=1).to_numpy().reshape(-1, 28, 28, 1)
 test_labels = to_categorical(ds_test['label'].to_numpy())
 
 model = Sequential()
-model.add(Conv2D(28, (5, 5), padding='same', input_shape=train_images.shape[1:]))
-model.add(LeakyReLU(alpha=0.2))
+model.add(Conv2D(32, (3, 3), padding='same', input_shape=train_images.shape[1:]))
+model.add(LeakyReLU(alpha=0.3))
 model.add(BatchNormalization())
-model.add(Conv2D(28, (5, 5)))
-model.add(LeakyReLU(alpha=0.2))
+model.add(Conv2D(32, (3, 3)))
+model.add(LeakyReLU(alpha=0.3))
 model.add(MaxPool2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
+model.add(Dropout(0.3))
 
-model.add(Conv2D(32, (5, 5), padding='same', input_shape=train_images.shape[1:]))
-model.add(LeakyReLU(alpha=0.2))
+model.add(Conv2D(64, (3, 3), padding='same'))
+model.add(LeakyReLU(alpha=0.3))
 model.add(BatchNormalization())
-model.add(Conv2D(32, (5, 5)))
-model.add(LeakyReLU(alpha=0.2))
+model.add(Conv2D(64, (3, 3)))
+model.add(LeakyReLU(alpha=0.3))
 model.add(MaxPool2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
+model.add(Dropout(0.3))
 
 model.add(Flatten())
 model.add(Dense(512))
-model.add(LeakyReLU(alpha=0.2))
-model.add(Dropout(0.25))
-model.add(Dense(62))
+model.add(LeakyReLU(alpha=0.3))
+model.add(Dropout(0.4))
+model.add(Dense(47))
 model.add(Activation('softmax'))
 
 
@@ -92,15 +92,34 @@ model.compile(optimizer='adam',
             metrics=['accuracy'])
 
 # Train the model
-model.fit(train_images, train_labels, epochs=5, batch_size=64)
+history = model.fit(train_images, train_labels, epochs=5, batch_size=64)
 # print(model.predict(transformed_image))
+
 
 # # Evaluate the model
 test_loss, test_acc = model.evaluate(test_images, test_labels)
 print(f"Test accuracy: {test_acc}")
 
+# plt.plot(history.history['accuracy'])
+# plt.plot(history.history['val_accuracy'])
+# plt.title('model accuracy')
+# plt.ylabel('accuracy')
+# plt.xlabel('epoch')
+# plt.legend(['train', 'val'], loc='upper left')
+# plt.show()
 
-model.save("emnist.keras")
+# plt.plot(history.history['loss'])
+# plt.plot(history.history['val_loss'])
+# plt.title('model loss')
+# plt.ylabel('loss')
+# plt.xlabel('epoch')
+# plt.legend(['train', 'val'], loc='upper left')
+# plt.show()
+
+with open('/trainHistoryDict', 'wb') as file_pi:
+    pickle.dump(history.history, file_pi)
+    
+# model.save("emnist.keras")
 
 # # convert 
 # model_json = model.to_json()
