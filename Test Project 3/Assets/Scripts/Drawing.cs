@@ -112,8 +112,8 @@ public class Drawing : MonoBehaviour
         InputDeviceCharacteristics rightController = (InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Right);
         InputDeviceCharacteristics leftController = (InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Left);
 
-        InputDevice right = devices[0];
-        InputDevice left = devices[0];
+        InputDevice right = default; // devices[0];
+        InputDevice left = default; //devices[0];
 
         foreach (var dev in devices)
         {
@@ -125,65 +125,68 @@ public class Drawing : MonoBehaviour
             {
                 left = dev;
             }
-        } 
-
-        float triggerValue = 0;
-
-        right.TryGetFeatureValue(CommonUsages.trigger, out triggerValue);
-        bool fTRpressed = triggerValue > 0.05;
-        left.TryGetFeatureValue(CommonUsages.trigger, out triggerValue);
-        bool fTLpressed = triggerValue > 0.05;
-
-        // right.TryGetFeatureValue(CommonUsages.primaryButton, out triggerValue);
-        bool aPressed;
-        right.TryGetFeatureValue(CommonUsages.primaryButton, out aPressed);
-        bool bPressed;
-        right.TryGetFeatureValue(CommonUsages.secondaryButton, out bPressed);
-        bool xPressed;
-        left.TryGetFeatureValue(CommonUsages.primaryButton, out xPressed);
-        bool yPressed;
-        left.TryGetFeatureValue(CommonUsages.secondaryButton, out yPressed);
-
-        Vector3 controllerPosition;
-        right.TryGetFeatureValue(CommonUsages.devicePosition, out controllerPosition);
-
-        // ilovejayText.text = controllerPosition.ToString();
-
-        if (fTRpressed)
-        {
-            // ilovejayText.text = "I really love Jay";
-            Vector3 currentPos = GetCurrentReading(right);
-            // marker.transform.position = currentPos;
-            positions.Add(currentPos);
-            // drawing code
         }
 
-        if (fTLpressed)
-        {
-            // ilovejayText.text = "I LOVE Jay";
-            Vector3 currentPos = GetCurrentReading(left);
-            // marker.transform.position = currentPos;
-            positions.Add(currentPos);
-            // drawing code
-        }
+        if (right != default)
+        { 
+            float triggerValue = 0;
 
-        if (aPressed && (waitcycle == 0))
-        {
-            ilovejayText.text = "A pressed?";
-            LogAttributes();
-            // clear_Screen();
-            waitcycle = 100;
+            right.TryGetFeatureValue(CommonUsages.trigger, out triggerValue);
+            bool fTRpressed = triggerValue > 0.05;
+            left.TryGetFeatureValue(CommonUsages.trigger, out triggerValue);
+            bool fTLpressed = triggerValue > 0.05;
 
-        }
+            // right.TryGetFeatureValue(CommonUsages.primaryButton, out triggerValue);
+            bool aPressed;
+            right.TryGetFeatureValue(CommonUsages.primaryButton, out aPressed);
+            bool bPressed;
+            right.TryGetFeatureValue(CommonUsages.secondaryButton, out bPressed);
+            bool xPressed;
+            left.TryGetFeatureValue(CommonUsages.primaryButton, out xPressed);
+            bool yPressed;
+            left.TryGetFeatureValue(CommonUsages.secondaryButton, out yPressed);
 
-        if (bPressed)
-        {
-            ilovejayText.text = "B pressed?";
-        }
+            Vector3 controllerPosition;
+            right.TryGetFeatureValue(CommonUsages.devicePosition, out controllerPosition);
 
-        if (waitcycle > 0)
-        {
-            waitcycle -= 1;
+            // ilovejayText.text = controllerPosition.ToString();
+
+            if (fTRpressed)
+            {
+                // ilovejayText.text = "I really love Jay";
+                Vector3 currentPos = GetCurrentReading(right);
+                // marker.transform.position = currentPos;
+                positions.Add(currentPos);
+                // drawing code
+            }
+
+            if (fTLpressed)
+            {
+                // ilovejayText.text = "I LOVE Jay";
+                Vector3 currentPos = GetCurrentReading(left);
+                // marker.transform.position = currentPos;
+                positions.Add(currentPos);
+                // drawing code
+            }
+
+            if (aPressed && (waitcycle == 0))
+            {
+                ilovejayText.text = "A pressed?";
+                LogAttributes();
+                // clear_Screen();
+                waitcycle = 100;
+
+            }
+
+            if (bPressed)
+            {
+                ilovejayText.text = "B pressed?";
+            }
+
+            if (waitcycle > 0)
+            {
+                waitcycle -= 1;
+            }
         }
 
 

@@ -34,8 +34,8 @@ public class ResetScreen : MonoBehaviour
         InputDeviceCharacteristics rightController = (InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Right);
         InputDeviceCharacteristics leftController = (InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Left);
 
-        InputDevice right = devices[0];
-        InputDevice left = devices[0];
+        InputDevice right = default;
+        InputDevice left = default;
 
         foreach (var dev in devices)
         {
@@ -49,12 +49,16 @@ public class ResetScreen : MonoBehaviour
             }
         } 
 
-        bool aPressed;
-        right.TryGetFeatureValue(CommonUsages.primaryButton, out aPressed);
-
-        if (aPressed)
+        if (right != default)
         {
-            mat.color = original;
+
+            bool aPressed;
+            right.TryGetFeatureValue(CommonUsages.primaryButton, out aPressed);
+
+            if (aPressed)
+            {
+                mat.color = original;
+            }
         }
     }
 }

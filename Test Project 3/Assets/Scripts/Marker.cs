@@ -31,8 +31,8 @@ public class Marker : MonoBehaviour
         InputDeviceCharacteristics rightController = (InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Right);
         InputDeviceCharacteristics leftController = (InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Left);
 
-        InputDevice right = devices[0];
-        InputDevice left = devices[0];
+        InputDevice right = default;
+        InputDevice left = default;
 
         foreach (var dev in devices)
         {
@@ -46,36 +46,39 @@ public class Marker : MonoBehaviour
             }
         } 
 
-        float triggerValue = 0;
-
-        right.TryGetFeatureValue(CommonUsages.trigger, out triggerValue);
-        bool fTRpressed = triggerValue > 0.05;
-        left.TryGetFeatureValue(CommonUsages.trigger, out triggerValue);
-        bool fTLpressed = triggerValue > 0.05;
-
-        if (fTRpressed)
+        if (right != default) 
         {
-            Vector3 controllerPosition;
-            right.TryGetFeatureValue(CommonUsages.devicePosition, out controllerPosition);
+            float triggerValue = 0;
 
-            Vector3 adjustment = new Vector3(0.0375f, 0, 0);
-            Vector3 change = controllerPosition;
-            Vector3 newPos = change + markerCenter + adjustment;
-            transform.position = newPos;
-        }
-        else if (fTLpressed)
-        {
-            Vector3 controllerPosition;
-            left.TryGetFeatureValue(CommonUsages.devicePosition, out controllerPosition);
+            right.TryGetFeatureValue(CommonUsages.trigger, out triggerValue);
+            bool fTRpressed = triggerValue > 0.05;
+            left.TryGetFeatureValue(CommonUsages.trigger, out triggerValue);
+            bool fTLpressed = triggerValue > 0.05;
 
-            Vector3 adjustment = new Vector3(0.0375f, 0, 0);
-            Vector3 change = controllerPosition;
-            Vector3 newPos = change + markerCenter + adjustment;
-            transform.position = newPos;
-        }
-        else
-        {
-            transform.position = markerCenter;
+            if (fTRpressed)
+            {
+                Vector3 controllerPosition;
+                right.TryGetFeatureValue(CommonUsages.devicePosition, out controllerPosition);
+
+                Vector3 adjustment = new Vector3(0.0375f, 0, 0);
+                Vector3 change = controllerPosition;
+                Vector3 newPos = change + markerCenter + adjustment;
+                transform.position = newPos;
+            }
+            else if (fTLpressed)
+            {
+                Vector3 controllerPosition;
+                left.TryGetFeatureValue(CommonUsages.devicePosition, out controllerPosition);
+
+                Vector3 adjustment = new Vector3(0.0375f, 0, 0);
+                Vector3 change = controllerPosition;
+                Vector3 newPos = change + markerCenter + adjustment;
+                transform.position = newPos;
+            }
+            else
+            {
+                transform.position = markerCenter;
+            }
         }
 
         // transform.position = controllerPosition;
