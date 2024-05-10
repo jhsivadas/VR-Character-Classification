@@ -45,13 +45,15 @@ public class Drawing : MonoBehaviour
         }
     }
 
+    /*
+
     void save_Data()
     {
         Storage.instance.letterNum = letterNum;
         Storage.instance.path = path;
         Storage.instance.waitcycle = waitcycle;
         Storage.instance.ilovejayText = ilovejayText;
-    }
+    }*/ 
 
 /*
     void clear_Screen()
@@ -171,7 +173,7 @@ public class Drawing : MonoBehaviour
 
             if (aPressed && (waitcycle == 0))
             {
-                ilovejayText.text = "A pressed?";
+                // ilovejayText.text = "A pressed?";
                 LogAttributes();
                 // clear_Screen();
                 waitcycle = 100;
@@ -180,7 +182,7 @@ public class Drawing : MonoBehaviour
 
             if (bPressed)
             {
-                ilovejayText.text = "B pressed?";
+                // ilovejayText.text = "B pressed?";
             }
 
             if (waitcycle > 0)
