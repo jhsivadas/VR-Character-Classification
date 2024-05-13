@@ -1,3 +1,106 @@
+// using System.Collections;
+// using System.Collections.Generic;
+// using UnityEngine;
+// using Google.Cloud.Storage.V1;
+// using Google.Apis.Auth.OAuth2;
+// using System;
+// using System.IO;
+
+// public class GoogleCloud : MonoBehaviour
+// {
+//     private string bucketName = "digits-vr";
+//     private string uploadName = "7_Z.csv";
+//     private string responseName = "response.txt";
+//     private string uploadFilePath;
+//     private string serviceAccountJsonPath;
+//     private DateTime lastCheckedTime;
+
+//     void Start()
+//     {
+//         serviceAccountJsonPath = Path.Combine(Application.dataPath, "googlecloud_credentials.json");  
+//         uploadFilePath = Path.Combine(Application.dataPath, uploadName);
+//         StartCoroutine(UploadAndReadFile(uploadFilePath));
+//     }
+
+//     IEnumerator UploadAndReadFile(string filePath)
+//     {
+//         // Upload file
+//         try
+//         {
+//             var credential = GoogleCredential.FromFile(serviceAccountJsonPath);
+//             var storageClient = StorageClient.Create(credential);
+
+//             using (var fileStream = File.OpenRead(filePath))
+//             {
+//                 storageClient.UploadObject(bucketName, uploadName, null, fileStream);
+//                 Debug.Log("Google File uploaded successfully.");
+//                 lastCheckedTime = DateTime.UtcNow;
+//             }
+//         }
+//         catch (Exception ex)
+//         {
+//             Debug.LogError($"An error occurred: {ex.Message}");
+//             yield break; // Stop the coroutine if the upload fails
+//         }
+
+//         // Read response file
+//         StartCoroutine(PollForFileUpdate());
+//     }
+
+//     IEnumerator PollForFileUpdate()
+//     {
+//         bool fileUpdated = false;
+
+//         while (!fileUpdated)
+//         {
+//             yield return new WaitForSeconds(1); // Polling interval
+
+//             try
+//             {
+//                 var credential = GoogleCredential.FromFile(serviceAccountJsonPath);
+//                 var storageClient = StorageClient.Create(credential);
+//                 var obj = storageClient.GetObject(bucketName, responseName);
+
+//                 if (obj.Updated.HasValue && obj.Updated.Value.ToUniversalTime() > lastCheckedTime)
+//                 {
+//                     fileUpdated = true;
+//                     Debug.Log("Response file has been updated.");
+//                 }
+//             }
+//             catch (Exception ex)
+//             {
+//                 Debug.LogError($"Failed to check file update status: {ex.Message}");
+//                 yield break;
+//             }
+//         }
+
+//         ReadFile();
+//     }
+
+//     void ReadFile()
+//     {
+//         Debug.Log("Reading...");
+//         try
+//         {
+//             var credential = GoogleCredential.FromFile(serviceAccountJsonPath);
+//             var storageClient = StorageClient.Create(credential);
+//             MemoryStream memoryStream = new MemoryStream();
+
+//             storageClient.DownloadObject(bucketName, responseName, memoryStream);
+//             memoryStream.Position = 0;
+
+//             StreamReader reader = new StreamReader(memoryStream);
+//             string fileContents = reader.ReadToEnd();
+
+//             Debug.Log($"Response File Contents: {fileContents}");
+//         }
+//         catch (Exception ex)
+//         {
+//             Debug.LogError($"Failed to download the response file: {ex.Message}");
+//         }
+//     }
+// }
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,101 +108,93 @@ using Google.Cloud.Storage.V1;
 using Google.Apis.Auth.OAuth2;
 using System;
 using System.IO;
+using System.Linq;
+using System.Collections.Concurrent;
 
 public class GoogleCloud : MonoBehaviour
 {
     private string bucketName = "digits-vr";
-    private string uploadName = "sexyjay.csv";
     private string responseName = "response.txt";
-    private string uploadFilePath;
-    private string responseFilePath;
+    private string folderPath;
     private string serviceAccountJsonPath;
-    private DateTime lastCheckedTime;
+    private ConcurrentQueue<string> fileQueue = new ConcurrentQueue<string>();
 
     void Start()
     {
-        serviceAccountJsonPath = Path.Combine(Application.dataPath, "googlecloud_credentials.json");  
-        uploadFilePath = Path.Combine(Application.dataPath, uploadName);
-        responseFilePath = Path.Combine(Application.dataPath, responseName);
+        serviceAccountJsonPath = Path.Combine(Application.dataPath, "googlecloud_credentials.json");
+        folderPath = Path.Combine(Application.dataPath, "Data");
 
-        StartCoroutine(UploadAndReadFile(uploadFilePath));
+        foreach (string filePath in Directory.GetFiles(folderPath, "*.csv"))
+        {
+            fileQueue.Enqueue(filePath);
+        }
+
+        StartCoroutine(ProcessFiles());
     }
 
-    IEnumerator UploadAndReadFile(string filePath)
+    IEnumerator ProcessFiles()
     {
+        while (fileQueue.TryDequeue(out string filePath))
+        {
+            yield return StartCoroutine(UploadAndReadFile(filePath, Path.GetFileName(filePath)));
+        }
+    }
+
+    IEnumerator UploadAndReadFile(string filePath, string uploadName)
+    {
+        // Upload file and wait for response in a single coroutine to maintain order
+        var credential = GoogleCredential.FromFile(serviceAccountJsonPath);
+        var storageClient = StorageClient.Create(credential);
+
         // Upload file
         try
         {
-            var credential = GoogleCredential.FromFile(serviceAccountJsonPath);
-            var storageClient = StorageClient.Create(credential);
-
             using (var fileStream = File.OpenRead(filePath))
             {
                 storageClient.UploadObject(bucketName, uploadName, null, fileStream);
-                Debug.Log("Google File uploaded successfully.");
-                lastCheckedTime = DateTime.UtcNow;
+                Debug.Log($"{uploadName} uploaded successfully.");
             }
         }
         catch (Exception ex)
         {
-            Debug.LogError($"An error occurred: {ex.Message}");
-            yield break; // Stop the coroutine if the upload fails
+            Debug.LogError($"An error occurred while uploading {uploadName}: {ex.Message}");
+            yield break;
         }
 
-        // Read response file
-        StartCoroutine(PollForFileUpdate());
+        // Wait for and read response
+        yield return StartCoroutine(WaitAndReadResponse());
     }
 
-    IEnumerator PollForFileUpdate()
+    IEnumerator WaitAndReadResponse()
     {
-        bool fileUpdated = false;
+        bool responseReceived = false;
+        DateTime lastCheckedTime = DateTime.UtcNow;
 
-        while (!fileUpdated)
+        while (!responseReceived)
         {
-            yield return new WaitForSeconds(1); // Polling interval
+            yield return new WaitForSeconds(1);
 
             try
             {
-                var credential = GoogleCredential.FromFile(serviceAccountJsonPath);
-                var storageClient = StorageClient.Create(credential);
-                var obj = storageClient.GetObject(bucketName, responseName);
-
+                var obj = StorageClient.Create(GoogleCredential.FromFile(serviceAccountJsonPath)).GetObject(bucketName, responseName);
                 if (obj.Updated.HasValue && obj.Updated.Value.ToUniversalTime() > lastCheckedTime)
                 {
-                    fileUpdated = true;
-                    Debug.Log("Response file has been updated.");
+                    responseReceived = true;
+                    MemoryStream memoryStream = new MemoryStream();
+                    StorageClient.Create(GoogleCredential.FromFile(serviceAccountJsonPath)).DownloadObject(bucketName, responseName, memoryStream);
+                    memoryStream.Position = 0;
+                    StreamReader reader = new StreamReader(memoryStream);
+                    string fileContents = reader.ReadToEnd();
+                    Debug.Log(Guid.NewGuid().ToString());
+                    Debug.Log($"Response File Contents: {fileContents}");
+                    Debug.Log(Guid.NewGuid().ToString());
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Failed to check file update status: {ex.Message}");
+                Debug.LogError("Failed to check or read response file: " + ex.Message);
                 yield break;
             }
-        }
-
-        ReadFile();
-    }
-
-    void ReadFile()
-    {
-        Debug.Log("Reading...");
-        try
-        {
-            var credential = GoogleCredential.FromFile(serviceAccountJsonPath);
-            var storageClient = StorageClient.Create(credential);
-            MemoryStream memoryStream = new MemoryStream();
-
-            storageClient.DownloadObject(bucketName, responseName, memoryStream);
-            memoryStream.Position = 0;
-
-            StreamReader reader = new StreamReader(memoryStream);
-            string fileContents = reader.ReadToEnd();
-
-            Debug.Log($"Response File Contents: {fileContents}");
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError($"Failed to download the response file: {ex.Message}");
         }
     }
 }
