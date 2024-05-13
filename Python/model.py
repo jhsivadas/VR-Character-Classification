@@ -12,53 +12,22 @@ import os
 import pickle
 from tensorflow.keras.models import model_from_json
 
-
-
-
-# # Load the dataset
-# (train_images, train_labels), (test_images, test_labels) = mnist.load_data()
-# # images, labels = extract_training_samples('digits')
-
-# # Preprocess the data
-# # train_images = train_images.reshape((60000, 28, 28, 1)).astype('float32') / 255
-# # test_images = test_images.reshape((10000, 28, 28, 1)).astype('float32') / 255
-
-# train_labels = to_categorical(train_labels)
-# print(train_labels.shape)
-# # test_labels = to_categorical(test_labels)
-
-
+# Read in EMNIST Data
 num_columns = 785
-
-# Create column names
 columns = ['label'] + list(range(1, num_columns))
-
 parent_dir = os.path.abspath(os.path.join(os.getcwd(), os.path.pardir))
-
-# Read the training and testing datasets
 ds_train = pd.read_csv(parent_dir + "/Data/emnist-bymerge-train.csv", header=None)
 ds_test = pd.read_csv(parent_dir + "/Data/emnist-bymerge-test.csv", header=None)
-
-# Assign column names to the DataFrames
 ds_train.columns = columns
 ds_test.columns = columns
-
-# Reset index
 ds_train = ds_train.reset_index(drop=True)
 ds_test = ds_test.reset_index(drop=True)
-
-
-print(ds_test.shape)
-# Extract features and labels
 train_images = ds_train.drop(['label'], axis=1).to_numpy().reshape(-1, 28, 28, 1)
 train_labels = to_categorical(ds_train['label'].to_numpy())
-
-print(train_images.shape)
-print(train_labels.shape)
-
 test_images = ds_test.drop(['label'], axis=1).to_numpy().reshape(-1, 28, 28, 1)  
 test_labels = to_categorical(ds_test['label'].to_numpy())
 
+# Build and compile CNN
 model = Sequential()
 model.add(Conv2D(32, (3, 3), padding='same', input_shape=train_images.shape[1:]))
 model.add(LeakyReLU(alpha=0.3))
@@ -87,9 +56,6 @@ model.add(Activation('softmax'))
 
 
 # Compile the model
-model.compile(optimizer='adam',
-            loss='categorical_crossentropy',
-            metrics=['accuracy'])
 
 # Train the model
 history = model.fit(train_images, train_labels, epochs=5, batch_size=64)
@@ -99,36 +65,3 @@ history = model.fit(train_images, train_labels, epochs=5, batch_size=64)
 # # Evaluate the model
 test_loss, test_acc = model.evaluate(test_images, test_labels)
 print(f"Test accuracy: {test_acc}")
-
-# plt.plot(history.history['accuracy'])
-# plt.plot(history.history['val_accuracy'])
-# plt.title('model accuracy')
-# plt.ylabel('accuracy')
-# plt.xlabel('epoch')
-# plt.legend(['train', 'val'], loc='upper left')
-# plt.show()
-
-# plt.plot(history.history['loss'])
-# plt.plot(history.history['val_loss'])
-# plt.title('model loss')
-# plt.ylabel('loss')
-# plt.xlabel('epoch')
-# plt.legend(['train', 'val'], loc='upper left')
-# plt.show()
-
-with open('/trainHistoryDict', 'wb') as file_pi:
-    pickle.dump(history.history, file_pi)
-    
-# model.save("emnist.keras")
-
-# # convert 
-# model_json = model.to_json()
-# with open("model.json", "w") as json_file:
-#     json_file.write(model_json)
-
-# # Save the model weights to a HDF5 file
-# model.save_weights("model.h5")
-
-
-# with open("model.pkl", "wb") as f:
-#     pickle.dump(model, f)
