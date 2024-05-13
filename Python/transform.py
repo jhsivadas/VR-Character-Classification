@@ -5,6 +5,7 @@ import pandas as pd
 from google.cloud import storage
 from google.cloud import aiplatform
 import joblib
+import random
 
 # Connect to trained model endpoint
 endpoint = aiplatform.Endpoint(
@@ -94,5 +95,5 @@ def fill(matrix):
                 for di in [-1, 0, 1]:
                     for dj in [-1, 0, 1]:
                         if (di != 0 or dj != 0) and 0 <= i + di < rows and 0 <= j + dj < cols and matrix[i + di, j + dj] == 0:
-                            matrix[i + di, j + dj] = 130
+                            matrix[i + di, j + dj] = random.randint(50, 200)
     return matrix
