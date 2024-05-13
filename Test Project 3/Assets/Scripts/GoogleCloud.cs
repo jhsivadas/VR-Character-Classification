@@ -27,10 +27,10 @@ public class GoogleCloud : MonoBehaviour
         uploadFilePath = Path.Combine(Application.persistentDataPath, uploadName); //Path.Combine(Application.dataPath, uploadName);
 
         ilovejayTextGCP.text = "GCP";
-        StartCoroutine(UploadAndReadFile(uploadFilePath));
+        // StartCoroutine(UploadAndReadFile(uploadFilePath));
     }
 
-    IEnumerator UploadAndReadFile(string filePath)
+    public IEnumerator UploadAndReadFile()
     {
         // ilovejayTextGCP.text = "trying to upload";
         // Upload file
@@ -39,7 +39,7 @@ public class GoogleCloud : MonoBehaviour
             var credential = GoogleCredential.FromFile(serviceAccountJsonPath);
             var storageClient = StorageClient.Create(credential);
 
-            using (var fileStream = File.OpenRead(filePath))
+            using (var fileStream = File.OpenRead(uploadFilePath))
             {
                 storageClient.UploadObject(bucketName, uploadName, null, fileStream);
                 ilovejayTextGCP.text = "Google File uploaded successfully.";
