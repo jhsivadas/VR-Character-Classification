@@ -996,8 +996,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   positions: []
-  path: 
-  letterNum: 0
   waitcycle: 0
   ilovejayText: {fileID: 625196393}
   marker: {fileID: 0}
@@ -1092,12 +1090,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f896dd3b4f46e4bbab941548052f4c61, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bucketName: digits-vr
-  responseName: response.txt
-  uploadName: positionalData.csv
-  uploadFilePath: 
-  serviceAccountJsonPath: 
-  ilovejayTextGCP: {fileID: 625196393}
 --- !u!1 &249530400
 GameObject:
   m_ObjectHideFlags: 0
@@ -1546,7 +1538,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Your Text Here!
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}

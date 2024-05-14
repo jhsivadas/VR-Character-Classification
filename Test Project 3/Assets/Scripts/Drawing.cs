@@ -8,29 +8,26 @@ using TMPro;
 using Google.Cloud.Storage.V1;
 using Google.Apis.Auth.OAuth2;
 using UnityEngine.SceneManagement;
+using System.Linq;
+using System.Collections.Concurrent;
 
 // using Oculus;
 
 public class Drawing : MonoBehaviour
 {
     public List<UnityEngine.Vector3> positions = new List<UnityEngine.Vector3>();
-    public string folderPath;
     public List<UnityEngine.XR.InputDevice> devices = new List<UnityEngine.XR.InputDevice>();
    // public int letterNum = 0;
     public int waitcycle = 0;
     public TMP_Text ilovejayText;
     public GameObject marker;
     public Camera renderCamera;
-    // public TMP_Text responseText;
-    private string bucketName = "digits-vr";
-    // private string uploadName = "sexyjay.csv";
-    // private string uploadName; 
-    private string responseName = "response.txt";
-    private string uploadName = "positionalData.csv";
-    private string uploadFilePath;
     private string filePath; 
+    private string bucketName = "digits-vr";
+    private string responseName = "response.txt";
+    private string folderPath;
     private string serviceAccountJsonPath;
-    private DateTime lastCheckedTime;
+    private ConcurrentQueue<string> fileQueue = new ConcurrentQueue<string>();
 
     public Vector3 GetCurrentReading(UnityEngine.XR.InputDevice device)
     {
@@ -47,7 +44,7 @@ public class Drawing : MonoBehaviour
 
     int letterNum()
     {
-        ilovejayText.text = "LetterNum";
+        // ilovejayText.text = "LetterNum";
         string[] filepaths = Directory.GetFiles(folderPath);
         List<string> actualFiles = new List<string>();
 
@@ -55,7 +52,7 @@ public class Drawing : MonoBehaviour
         {
             actualFiles.Add(Path.GetFileName(filePath));
         }
-        ilovejayText.text = "Got through getting the files";
+        // ilovejayText.text = "Got through getting the files";
 
         // files will be called positionalData_#.csv
         // number will be 16th element (15 position)
@@ -72,9 +69,9 @@ public class Drawing : MonoBehaviour
             {
                 string num = file.Substring(15);
                 num = num.Substring(0, num.Length - 4);
-                ilovejayText.text = num;
+                // ilovejayText.text = num;
                 int number = int.Parse(num);
-                ilovejayText.text = "iloveJay";
+                // ilovejayText.text = "iloveJay";
 
                 if (number > largest)
                 {
@@ -138,8 +135,10 @@ public class Drawing : MonoBehaviour
         {
             renderCamera = rC.GetComponent<Camera>();
         } 
-        serviceAccountJsonPath = Path.Combine(Application.persistentDataPath, "googlecloud_credentials.json");  
-        uploadFilePath = Path.Combine(Application.persistentDataPath, uploadName);
+
+        serviceAccountJsonPath = Path.Combine(Application.persistentDataPath, "googlecloud_credentials.json");
+
+        // ilovejayText.text = Directory.GetFiles(folderPath, "*.csv").Length.ToString();
 
         /*
         letterNum = Storage.instance.letterNum;
@@ -242,15 +241,21 @@ public class Drawing : MonoBehaviour
                 // ilovejayText.text = $"A pressed?" + letters;
                 LogAttributes();
                 // clear_Screen();
-                waitcycle = 100;
+                waitcycle = 50;
                 // SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             }
 
-            if (bPressed)
+            if (bPressed && (waitcycle == 0))
             {
-                ilovejayText.text = "B pressed?";
+                // ilovejayText.text = "B pressed?";
                 LogAttributes();
-                StartCoroutine(UploadAndReadFile());
+                foreach (string theFilePath in Directory.GetFiles(folderPath, "*.csv"))
+                {
+                    ilovejayText.text = theFilePath;
+                    fileQueue.Enqueue(theFilePath);
+                }
+                StartCoroutine(ProcessFiles());
+                waitcycle = 50;
                 // ilovejayText.text = "B pressed?";
             }
 
@@ -272,6 +277,78 @@ public class Drawing : MonoBehaviour
                 waitcycle -= 1;
             }
         }
+
+
+    IEnumerator ProcessFiles()
+    {
+        // ilovejayText.text = fileQueue.Count.ToString();
+        while (fileQueue.TryDequeue(out string theFilePath))
+        {
+            yield return StartCoroutine(UploadAndReadFile(theFilePath, Path.GetFileName(theFilePath)));
+        }
+    }
+
+    IEnumerator UploadAndReadFile(string filePath, string uploadName)
+    {
+        ilovejayText.text = "got here";
+        // Upload file and wait for response in a single coroutine to maintain order
+        var credential = GoogleCredential.FromFile(serviceAccountJsonPath);
+        var storageClient = StorageClient.Create(credential);
+        ilovejayText.text = "starting upload";
+
+        // Upload file
+        try
+        {
+            ilovejayText.text = "upload started";
+            using (var fileStream = File.OpenRead(filePath))
+            {
+                storageClient.UploadObject(bucketName, uploadName, null, fileStream);
+                ilovejayText.text = $"{uploadName} uploaded successfully.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ilovejayText.text = $"An error occurred while uploading {uploadName}: {ex.Message}";
+            yield break;
+        }
+
+        // Wait for and read response
+        yield return StartCoroutine(WaitAndReadResponse());
+    }
+
+    IEnumerator WaitAndReadResponse()
+    {
+        ilovejayText.text = "trying to get response";
+        bool responseReceived = false;
+        DateTime lastCheckedTime = DateTime.UtcNow;
+        string current = ilovejayText.text;
+
+        while (!responseReceived)
+        {
+            yield return new WaitForSeconds(1);
+
+            try
+            {
+                var obj = StorageClient.Create(GoogleCredential.FromFile(serviceAccountJsonPath)).GetObject(bucketName, responseName);
+                if (obj.Updated.HasValue && obj.Updated.Value.ToUniversalTime() > lastCheckedTime)
+                {
+                    responseReceived = true;
+                    MemoryStream memoryStream = new MemoryStream();
+                    StorageClient.Create(GoogleCredential.FromFile(serviceAccountJsonPath)).DownloadObject(bucketName, responseName, memoryStream);
+                    memoryStream.Position = 0;
+                    StreamReader reader = new StreamReader(memoryStream);
+                    string fileContents = reader.ReadToEnd();
+                    ilovejayText.text = current + fileContents;
+                }
+            }
+            catch (Exception ex)
+            {
+                ilovejayText.text = "Failed to check or read response file: " + ex.Message;
+                yield break;
+            }
+        }
+    }
+}
 
 
 
@@ -317,7 +394,7 @@ public class Drawing : MonoBehaviour
         
     }
 
-
+/*
     public IEnumerator UploadAndReadFile()
     {
         // ilovejayTextGCP.text = "trying to upload";
@@ -397,4 +474,4 @@ public class Drawing : MonoBehaviour
             ilovejayText.text = $"Failed to download the response file: {ex.Message}";
         }
     }
-}
+}*/
