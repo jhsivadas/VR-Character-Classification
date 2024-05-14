@@ -252,10 +252,10 @@ public class Drawing : MonoBehaviour
             {
                 // ilovejayText.text = "B pressed?";
                 LogAttributes();
-                foreach (string path in Directory.GetFiles(uploadFolderPath, "*.csv"))
+                foreach (string uploadFilePath in Directory.GetFiles(uploadFolderPath, "*.csv"))
                 {
-                    ilovejayText.text = path;
-                    fileQueue.Enqueue(path);
+                    ilovejayText.text = uploadFilePath;
+                    fileQueue.Enqueue(uploadFilePath);
                 }
                 StartCoroutine(ProcessFiles());
                 waitcycle = 50;
@@ -280,29 +280,25 @@ public class Drawing : MonoBehaviour
                 waitcycle -= 1;
             }
         }
-
+    }
 
     IEnumerator ProcessFiles()
     {
         // ilovejayText.text = fileQueue.Count.ToString();
-        while (fileQueue.TryDequeue(out string path))
+        while (fileQueue.TryDequeue(out string uploadFilePath))
         {
-            yield return StartCoroutine(UploadAndReadFile(path, Path.GetFileName(path)));
+            yield return StartCoroutine(UploadAndReadFile(uploadFilePath, Path.GetFileName(uploadFilePath)));
         }
     }
 
     IEnumerator UploadAndReadFile(string uploadFilePath, string uploadName)
     {
-        ilovejayText.text = "got here";
-        // Upload file and wait for response in a single coroutine to maintain order
-        var credential = GoogleCredential.FromFile(serviceAccountJsonPath);
-        var storageClient = StorageClient.Create(credential);
-        ilovejayText.text = "starting upload";
-
-        // Upload file
         try
         {
+            var credential = GoogleCredential.FromFile(serviceAccountJsonPath);
+            var storageClient = StorageClient.Create(credential);
             ilovejayText.text = "upload started";
+
             using (var fileStream = File.OpenRead(uploadFilePath))
             {
                 storageClient.UploadObject(bucketName, uploadName, null, fileStream);
@@ -332,12 +328,15 @@ public class Drawing : MonoBehaviour
 
             try
             {
-                var obj = StorageClient.Create(GoogleCredential.FromFile(serviceAccountJsonPath)).GetObject(bucketName, responseName);
+                var credential = GoogleCredential.FromFile(serviceAccountJsonPath);
+                var storageClient = StorageClient.Create(credential);
+                var obj = storageClient.GetObject(bucketName, responseName);
+                
                 if (obj.Updated.HasValue && obj.Updated.Value.ToUniversalTime() > lastCheckedTime)
                 {
                     responseReceived = true;
                     MemoryStream memoryStream = new MemoryStream();
-                    StorageClient.Create(GoogleCredential.FromFile(serviceAccountJsonPath)).DownloadObject(bucketName, responseName, memoryStream);
+                    storageClient.DownloadObject(bucketName, responseName, memoryStream);
                     memoryStream.Position = 0;
                     StreamReader reader = new StreamReader(memoryStream);
                     string fileContents = reader.ReadToEnd();
@@ -395,7 +394,7 @@ public class Drawing : MonoBehaviour
         //bool fTRpressed = OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch);
         // bool fTLpressed = OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.LTouch);
         
-    }
+    // }
 
 /*
     public IEnumerator UploadAndReadFile()

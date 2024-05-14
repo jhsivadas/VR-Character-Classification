@@ -115,18 +115,18 @@ public class GoogleCloud : MonoBehaviour
 {
     private string bucketName = "digits-vr";
     private string responseName = "response.txt";
-    private string folderPath;
+    private string uploadFolderPath;
     private string serviceAccountJsonPath;
     private ConcurrentQueue<string> fileQueue = new ConcurrentQueue<string>();
 
     void Start()
     {
         serviceAccountJsonPath = Path.Combine(Application.dataPath, "googlecloud_credentials.json");
-        folderPath = Path.Combine(Application.dataPath, "Data");
+        uploadFolderPath = Path.Combine(Application.dataPath, "Data");
 
-        foreach (string filePath in Directory.GetFiles(folderPath, "*.csv"))
+        foreach (string uploadFilePath in Directory.GetFiles(uploadFolderPath, "*.csv"))
         {
-            fileQueue.Enqueue(filePath);
+            fileQueue.Enqueue(uploadFilePath);
         }
 
         StartCoroutine(ProcessFiles());
@@ -134,22 +134,20 @@ public class GoogleCloud : MonoBehaviour
 
     IEnumerator ProcessFiles()
     {
-        while (fileQueue.TryDequeue(out string filePath))
+        while (fileQueue.TryDequeue(out string uploadFilePath))
         {
-            yield return StartCoroutine(UploadAndReadFile(filePath, Path.GetFileName(filePath)));
+            yield return StartCoroutine(UploadAndReadFile(uploadFilePath, Path.GetFileName(uploadFilePath)));
         }
     }
 
-    IEnumerator UploadAndReadFile(string filePath, string uploadName)
+    IEnumerator UploadAndReadFile(string uploadFilePath, string uploadName)
     {
-        // Upload file and wait for response in a single coroutine to maintain order
-        var credential = GoogleCredential.FromFile(serviceAccountJsonPath);
-        var storageClient = StorageClient.Create(credential);
-
-        // Upload file
         try
         {
-            using (var fileStream = File.OpenRead(filePath))
+            var credential = GoogleCredential.FromFile(serviceAccountJsonPath);
+            var storageClient = StorageClient.Create(credential);
+
+            using (var fileStream = File.OpenRead(uploadFilePath))
             {
                 storageClient.UploadObject(bucketName, uploadName, null, fileStream);
                 Debug.Log($"{uploadName} uploaded successfully.");
@@ -167,8 +165,10 @@ public class GoogleCloud : MonoBehaviour
 
     IEnumerator WaitAndReadResponse()
     {
+        ilovejayText.text = "trying to get response";
         bool responseReceived = false;
         DateTime lastCheckedTime = DateTime.UtcNow;
+        string current = ilovejayText.text;
 
         while (!responseReceived)
         {
@@ -176,23 +176,24 @@ public class GoogleCloud : MonoBehaviour
 
             try
             {
-                var obj = StorageClient.Create(GoogleCredential.FromFile(serviceAccountJsonPath)).GetObject(bucketName, responseName);
+                var credential = GoogleCredential.FromFile(serviceAccountJsonPath);
+                var storageClient = StorageClient.Create(credential);
+                var obj = storageClient.GetObject(bucketName, responseName);
+                
                 if (obj.Updated.HasValue && obj.Updated.Value.ToUniversalTime() > lastCheckedTime)
                 {
                     responseReceived = true;
                     MemoryStream memoryStream = new MemoryStream();
-                    StorageClient.Create(GoogleCredential.FromFile(serviceAccountJsonPath)).DownloadObject(bucketName, responseName, memoryStream);
+                    storageClient.DownloadObject(bucketName, responseName, memoryStream);
                     memoryStream.Position = 0;
                     StreamReader reader = new StreamReader(memoryStream);
                     string fileContents = reader.ReadToEnd();
-                    Debug.Log(Guid.NewGuid().ToString());
-                    Debug.Log($"Response File Contents: {fileContents}");
-                    Debug.Log(Guid.NewGuid().ToString());
+                    ilovejayText.text = current + fileContents;
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogError("Failed to check or read response file: " + ex.Message);
+                ilovejayText.text = "Failed to check or read response file: " + ex.Message;
                 yield break;
             }
         }
