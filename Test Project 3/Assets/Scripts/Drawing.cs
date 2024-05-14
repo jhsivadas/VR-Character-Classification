@@ -254,7 +254,7 @@ public class Drawing : MonoBehaviour
                 LogAttributes();
                 foreach (string uploadFilePath in Directory.GetFiles(uploadFolderPath, "*.csv"))
                 {
-                    ilovejayText.text = uploadFilePath;
+                    // ilovejayText.text = uploadFilePath;
                     fileQueue.Enqueue(uploadFilePath);
                 }
                 StartCoroutine(ProcessFiles());
@@ -297,12 +297,12 @@ public class Drawing : MonoBehaviour
         {
             var credential = GoogleCredential.FromFile(serviceAccountJsonPath);
             var storageClient = StorageClient.Create(credential);
-            ilovejayText.text = "upload started";
+            // ilovejayText.text = "upload started";
 
             using (var fileStream = File.OpenRead(uploadFilePath))
             {
                 storageClient.UploadObject(bucketName, uploadName, null, fileStream);
-                ilovejayText.text = $"{uploadName} uploaded successfully.";
+                // ilovejayText.text = $"{uploadName} uploaded successfully.";
             }
         }
         catch (Exception ex)
@@ -317,7 +317,7 @@ public class Drawing : MonoBehaviour
 
     IEnumerator WaitAndReadResponse()
     {
-        ilovejayText.text = "trying to get response";
+        // ilovejayText.text = "trying to get response";
         bool responseReceived = false;
         DateTime lastCheckedTime = DateTime.UtcNow;
         string current = ilovejayText.text;
