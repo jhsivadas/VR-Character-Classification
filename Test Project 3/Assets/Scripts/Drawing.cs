@@ -23,9 +23,11 @@ public class Drawing : MonoBehaviour
     public GameObject marker;
     public Camera renderCamera;
     private string filePath; 
+    private string folderPath;
+
     private string bucketName = "digits-vr";
     private string responseName = "response.txt";
-    private string folderPath;
+    private string uploadFolderPath;
     private string serviceAccountJsonPath;
     private ConcurrentQueue<string> fileQueue = new ConcurrentQueue<string>();
 
@@ -137,6 +139,7 @@ public class Drawing : MonoBehaviour
         } 
 
         serviceAccountJsonPath = Path.Combine(Application.persistentDataPath, "googlecloud_credentials.json");
+        uploadFolderPath = folderPath;
 
         // ilovejayText.text = Directory.GetFiles(folderPath, "*.csv").Length.ToString();
 
@@ -249,10 +252,10 @@ public class Drawing : MonoBehaviour
             {
                 // ilovejayText.text = "B pressed?";
                 LogAttributes();
-                foreach (string theFilePath in Directory.GetFiles(folderPath, "*.csv"))
+                foreach (string path in Directory.GetFiles(uploadFolderPath, "*.csv"))
                 {
-                    ilovejayText.text = theFilePath;
-                    fileQueue.Enqueue(theFilePath);
+                    ilovejayText.text = path;
+                    fileQueue.Enqueue(path);
                 }
                 StartCoroutine(ProcessFiles());
                 waitcycle = 50;
@@ -282,13 +285,13 @@ public class Drawing : MonoBehaviour
     IEnumerator ProcessFiles()
     {
         // ilovejayText.text = fileQueue.Count.ToString();
-        while (fileQueue.TryDequeue(out string theFilePath))
+        while (fileQueue.TryDequeue(out string path))
         {
-            yield return StartCoroutine(UploadAndReadFile(theFilePath, Path.GetFileName(theFilePath)));
+            yield return StartCoroutine(UploadAndReadFile(path, Path.GetFileName(path)));
         }
     }
 
-    IEnumerator UploadAndReadFile(string filePath, string uploadName)
+    IEnumerator UploadAndReadFile(string uploadFilePath, string uploadName)
     {
         ilovejayText.text = "got here";
         // Upload file and wait for response in a single coroutine to maintain order
@@ -300,7 +303,7 @@ public class Drawing : MonoBehaviour
         try
         {
             ilovejayText.text = "upload started";
-            using (var fileStream = File.OpenRead(filePath))
+            using (var fileStream = File.OpenRead(uploadFilePath))
             {
                 storageClient.UploadObject(bucketName, uploadName, null, fileStream);
                 ilovejayText.text = $"{uploadName} uploaded successfully.";
