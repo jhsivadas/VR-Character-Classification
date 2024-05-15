@@ -312,7 +312,6 @@ public class Drawing : MonoBehaviour
         }
 
         // Wait for and read response
-        yield return new WaitForSeconds(1);
         yield return StartCoroutine(WaitAndReadResponse());
     }
 
@@ -325,7 +324,7 @@ public class Drawing : MonoBehaviour
 
         while (!responseReceived)
         {
-            yield return new WaitForSeconds(1);
+            yield return new WaitForSeconds(0.5f);
 
             try
             {
