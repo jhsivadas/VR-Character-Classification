@@ -350,14 +350,16 @@ public class Drawing : MonoBehaviour
                     string fileContents = reader.ReadToEnd();
                     ilovejayText.text = current + fileContents;
                 }
+                else 
+                {
+                    responseReceived = false;
+                }
             }
             catch (Exception ex)
             {
                 ilovejayText.text = "Failed to check or read response file: " + ex.Message;
                 yield break;
             }
-
-            responseReceived = false;
         }
     }
 }
