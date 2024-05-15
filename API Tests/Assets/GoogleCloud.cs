@@ -182,16 +182,16 @@ public class GoogleCloud : MonoBehaviour
 
                 ilovejayText.text = $"{obj.Updated.Value.ToUniversalTime()}, {lastCheckTime}";
                 
-                // if (obj.Updated.HasValue && obj.Updated.Value.ToUniversalTime() > lastCheckedTime)
-                // {
-                //     responseReceived = true;
-                //     MemoryStream memoryStream = new MemoryStream();
-                //     storageClient.DownloadObject(bucketName, responseName, memoryStream);
-                //     memoryStream.Position = 0;
-                //     StreamReader reader = new StreamReader(memoryStream);
-                //     string fileContents = reader.ReadToEnd();
-                //     ilovejayText.text = current + fileContents;
-                // }
+                if (obj.Updated.HasValue && obj.Updated.Value.ToUniversalTime() > lastCheckedTime)
+                {
+                    responseReceived = true;
+                    MemoryStream memoryStream = new MemoryStream();
+                    storageClient.DownloadObject(bucketName, responseName, memoryStream);
+                    memoryStream.Position = 0;
+                    StreamReader reader = new StreamReader(memoryStream);
+                    string fileContents = reader.ReadToEnd();
+                    ilovejayText.text = current + fileContents;
+                }
             }
             catch (Exception ex)
             {
