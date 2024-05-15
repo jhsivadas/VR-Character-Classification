@@ -342,8 +342,7 @@ public class Drawing : MonoBehaviour
                 var storageClient = StorageClient.Create(credential);
                 ilovejayText.text = "gothere2";
                 var obj = storageClient.GetObject(bucketName, responseName);
-                ilovejayText.text = "gothere3";
-                ilovejayText.text = $"{obj.Updated.Value.ToUniversalTime()}, {lastCheckTime}";
+                ilovejayText.text = $"gothere3, {obj.Updated.Value.ToUniversalTime()}, {lastCheckTime}";
                 
                 if (obj.Updated.HasValue && obj.Updated.Value.ToUniversalTime() > lastCheckedTime)
                 {
