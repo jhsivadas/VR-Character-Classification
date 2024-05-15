@@ -356,6 +356,8 @@ public class Drawing : MonoBehaviour
                 ilovejayText.text = "Failed to check or read response file: " + ex.Message;
                 yield break;
             }
+
+            responseReceived = false;
         }
     }
 }
