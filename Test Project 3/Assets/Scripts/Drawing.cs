@@ -258,7 +258,7 @@ public class Drawing : MonoBehaviour
                     fileQueue.Enqueue(uploadFilePath);
                 }
                 StartCoroutine(ProcessFiles());
-                waitcycle = 50;
+                // waitcycle = 50;
                 // ilovejayText.text = "B pressed?";
             }
 
