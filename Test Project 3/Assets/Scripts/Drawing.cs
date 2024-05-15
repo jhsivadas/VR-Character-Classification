@@ -336,19 +336,31 @@ public class Drawing : MonoBehaviour
 
             try
             {
+                ilovejayText.text = "gothere0";
                 var credential = GoogleCredential.FromFile(serviceAccountJsonPath);
+                ilovejayText.text = "gothere1";
                 var storageClient = StorageClient.Create(credential);
+                ilovejayText.text = "gothere2";
                 var obj = storageClient.GetObject(bucketName, responseName);
+                ilovejayText.text = "gothere3";
+                ilovejayText.text = $"{obj.Updated.Value.ToUniversalTime()}, {lastCheckTime}";
                 
                 if (obj.Updated.HasValue && obj.Updated.Value.ToUniversalTime() > lastCheckedTime)
                 {
+                    ilovejayText.text = "gothere4";
                     responseReceived = true;
+                    ilovejayText.text = "gothere5";
                     MemoryStream memoryStream = new MemoryStream();
+                    ilovejayText.text = "gothere6";
                     storageClient.DownloadObject(bucketName, responseName, memoryStream);
+                    ilovejayText.text = "gothere7";
                     memoryStream.Position = 0;
+                    ilovejayText.text = "gothere8";
                     StreamReader reader = new StreamReader(memoryStream);
+                    ilovejayText.text = "gothere9";
                     string fileContents = reader.ReadToEnd();
-                    ilovejayText.text = current + fileContents;
+                    ilovejayText.text = "gothere10";
+                    ilovejayText.text = $"gothere11, {current + fileContents}, {fileContents}, {obj.Updated.Value.ToUniversalTime()}, {lastCheckTime}";
                 }
                 else 
                 {

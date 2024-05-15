@@ -179,8 +179,6 @@ public class GoogleCloud : MonoBehaviour
                 var credential = GoogleCredential.FromFile(serviceAccountJsonPath);
                 var storageClient = StorageClient.Create(credential);
                 var obj = storageClient.GetObject(bucketName, responseName);
-
-                ilovejayText.text = $"{obj.Updated.Value.ToUniversalTime()}, {lastCheckTime}";
                 
                 if (obj.Updated.HasValue && obj.Updated.Value.ToUniversalTime() > lastCheckedTime)
                 {
