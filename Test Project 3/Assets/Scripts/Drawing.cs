@@ -312,6 +312,7 @@ public class Drawing : MonoBehaviour
         }
 
         // Wait for and read response
+        yield return new WaitForSeconds(1);
         yield return StartCoroutine(WaitAndReadResponse());
     }
 
