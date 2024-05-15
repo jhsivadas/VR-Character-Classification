@@ -252,7 +252,15 @@ public class Drawing : MonoBehaviour
             {
                 // ilovejayText.text = "B pressed?";
                 LogAttributes();
-                foreach (string uploadFilePath in Directory.GetFiles(uploadFolderPath, "*.csv"))
+
+                var sortedFiles = Directory.GetFiles(uploadFolderPath, "*.csv")
+                           .OrderBy(filePath => 
+                           {
+                               string fileName = Path.GetFileNameWithoutExtension(filePath);
+                               return int.Parse(new string(fileName.Where(char.IsDigit).ToArray()));
+                           })
+                           .ToList();
+                foreach (string uploadFilePath in sortedFiles)
                 {
                     // ilovejayText.text = uploadFilePath;
                     fileQueue.Enqueue(uploadFilePath);
