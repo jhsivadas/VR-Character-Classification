@@ -328,13 +328,14 @@ public class Drawing : MonoBehaviour
 
     IEnumerator WaitAndReadResponse()
     {
-        // ilovejayText.text = "trying to get response";
         bool responseReceived = false;
         string current = ilovejayText.text;
+        float backoffTime = 0.5f;
+        const float maxBackoffTime = 8.0f;
 
         while (!responseReceived)
         {
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(backoffTime);
 
             try
             {
@@ -355,6 +356,7 @@ public class Drawing : MonoBehaviour
                 else 
                 {
                     responseReceived = false;
+                    backoffTime = Mathf.Min(backoffTime * 2, maxBackoffTime);
                 }
             }
             catch (Exception ex)
