@@ -33,7 +33,7 @@ public class Drawing : MonoBehaviour
     // String that denotes the path to the current file
     private string filePath; 
 
-    // String that denotes the path to the file containing the letter csvs
+    // String that denotes the path to the folder containing the letter csvs
     private string folderPath;
 
     // DateTime that keeps track of the old time of response.txt file on GCP
@@ -45,7 +45,7 @@ public class Drawing : MonoBehaviour
     // String that denotes the name of the response file on GCP
     private string responseName = "response.txt";
 
-    // String that denotes the path to the file whose contents will be uploaded to GCP
+    // String that denotes the path to the folder whose contents will be uploaded to GCP
     private string uploadFolderPath;
 
     // String that denotes the path to the service account credentials for GCP
