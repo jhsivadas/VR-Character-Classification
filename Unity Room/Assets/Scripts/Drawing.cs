@@ -15,23 +15,37 @@ using System.Collections.Concurrent;
 
 public class Drawing : MonoBehaviour
 {
+    // Global variables used throughout the program
+
+    // List that contains the position data
     public List<UnityEngine.Vector3> positions = new List<UnityEngine.Vector3>();
+
+    // List that contains active devices
     public List<UnityEngine.XR.InputDevice> devices = new List<UnityEngine.XR.InputDevice>();
-   // public int letterNum = 0;
+
+    // Certain functions need to wait a number of frames to go again
+    // this variable is used to measure how many frames we should wait for
     public int waitcycle = 0;
+
+    // The main TextMesh that receives the string to be displayed 
     public TMP_Text ilovejayText;
-    public GameObject marker;
-    public Camera renderCamera;
+
+    // String that denotes the path to the current file
     private string filePath; 
+
+    // String that denotes the path to the file containing the letter csvs
     private string folderPath;
 
+    // Max?
     private DateTime lastCheckedTime;
+
     private string bucketName = "digits-vr";
     private string responseName = "response.txt";
     private string uploadFolderPath;
     private string serviceAccountJsonPath;
     private ConcurrentQueue<string> fileQueue = new ConcurrentQueue<string>();
 
+    // Provides the current position of this device
     public Vector3 GetCurrentReading(UnityEngine.XR.InputDevice device)
     {
         Vector3 recordedValue;
@@ -39,15 +53,16 @@ public class Drawing : MonoBehaviour
         return recordedValue;
     }
 
+    // Refresh the list of devices currently connected
     public void RefreshDevices()
     {
         devices.Clear();
         InputDevices.GetDevices(devices);
     }
 
+    // checks how many files are already in the folder
     int letterNum()
     {
-        // ilovejayText.text = "LetterNum";
         string[] filepaths = Directory.GetFiles(folderPath);
         List<string> actualFiles = new List<string>();
 
@@ -55,10 +70,6 @@ public class Drawing : MonoBehaviour
         {
             actualFiles.Add(Path.GetFileName(filePath));
         }
-        // ilovejayText.text = "Got through getting the files";
-
-        // files will be called positionalData_#.csv
-        // number will be 16th element (15 position)
 
         int largest = 0;
 
@@ -72,26 +83,24 @@ public class Drawing : MonoBehaviour
             {
                 string num = file.Substring(15);
                 num = num.Substring(0, num.Length - 4);
-                // ilovejayText.text = num;
                 int number = int.Parse(num);
-                // ilovejayText.text = "iloveJay";
 
                 if (number > largest)
                 {
                     largest = number;
                 }           
             }
-            // ilovejayText.text = "return value";
+
             return largest;
         }
     }
 
+    // Create the CSV file
     void createCSV()
     {
         int numberOfFiles = letterNum() + 1;
         string filename = $"positionalData_" + numberOfFiles + ".csv";
         filePath = Path.Combine(folderPath, filename);
-        // path = Path.Combine(Application.persistentDataPath, filename);
         string header = "controller_right_pos.x,controller_right_pos.y,controller_right_pos.z";
 
         using (StreamWriter writer = new StreamWriter(filePath)) 
@@ -100,25 +109,6 @@ public class Drawing : MonoBehaviour
         }
         
     }
-
-    /*
-
-    void save_Data()
-    {
-        Storage.instance.letterNum = letterNum;
-        Storage.instance.path = path;
-        Storage.instance.waitcycle = waitcycle;
-        Storage.instance.ilovejayText = ilovejayText;
-    }*/ 
-
-/*
-    void clear_Screen()
-    {
-        CameraClearFlags original = renderCamera.clearFlags;
-        renderCamera.clearFlags = CameraClearFlags.Skybox;
-        renderCamera.Render();
-        renderCamera.clearFlags = original;
-    }*/
 
     // Start is called before the first frame update
     void Start()
@@ -131,32 +121,13 @@ public class Drawing : MonoBehaviour
             Directory.CreateDirectory(folderPath);
         }
 
-        marker = GameObject.Find("Marker");
         GameObject rC = GameObject.Find("Camera");
-        renderCamera = null;
-        if (rC != null)
-        {
-            renderCamera = rC.GetComponent<Camera>();
-        } 
 
         serviceAccountJsonPath = Path.Combine(Application.persistentDataPath, "googlecloud_credentials.json");
         uploadFolderPath = folderPath;
-
-        // ilovejayText.text = Directory.GetFiles(folderPath, "*.csv").Length.ToString();
-
-        /*
-        letterNum = Storage.instance.letterNum;
-        path = Storage.instance.path;
-        waitcycle = Storage.instance.waitcycle;
-        ilovejayText = Storage.instance.ilovejayText;
-
-        */
-        // transform.position = new Vector3(-32, 10, -1);
-        // createCSV();
-        // lol do I even need anything here
-        // theoretically a check but I'll do that later
     }
 
+    // Log the positional data in a csv file
     void LogAttributes()
     {
         createCSV();
@@ -170,23 +141,24 @@ public class Drawing : MonoBehaviour
         }
 
         positions.Clear();
-        // letterNum += 1;
-        // save_Data();
-        // SceneManager.LoadScene(GetActiveScene().name);
-
     }
 
     // Update is called once per frame
     void Update()
     {
+        // check to make sure the same devices are still connected
         RefreshDevices();
 
+        // create a mask for identifying the right and left controllers
         InputDeviceCharacteristics rightController = (InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Right);
         InputDeviceCharacteristics leftController = (InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Left);
 
-        InputDevice right = default; // devices[0];
-        InputDevice left = default; //devices[0];
+        // for now, set these to defaul so they can be accessed outside 
+        // the following for loop
+        InputDevice right = default; 
+        InputDevice left = default; 
 
+        // check all connected devices, finding the right and left controller
         foreach (var dev in devices)
         {
             if ((dev.characteristics & rightController) == rightController)
@@ -199,16 +171,23 @@ public class Drawing : MonoBehaviour
             }
         }
 
+        // if they've been found
         if (right != default)
         { 
+            // trigger value is the amount of pressure applied to that button
             float triggerValue = 0;
 
+            // get the pressure applied to the right front trigger
             right.TryGetFeatureValue(CommonUsages.trigger, out triggerValue);
+            // if its over 0.05, that's my threshold for it being pressed
             bool fTRpressed = triggerValue > 0.05;
+
+            // similar for left front trigger
             left.TryGetFeatureValue(CommonUsages.trigger, out triggerValue);
             bool fTLpressed = triggerValue > 0.05;
 
-            // right.TryGetFeatureValue(CommonUsages.primaryButton, out triggerValue);
+            // slightly different code, but directly checks if each button has
+            // been pressed
             bool aPressed;
             right.TryGetFeatureValue(CommonUsages.primaryButton, out aPressed);
             bool bPressed;
@@ -218,41 +197,49 @@ public class Drawing : MonoBehaviour
             bool yPressed;
             left.TryGetFeatureValue(CommonUsages.secondaryButton, out yPressed);
 
-            Vector3 controllerPosition;
-            right.TryGetFeatureValue(CommonUsages.devicePosition, out controllerPosition);
-
-            // ilovejayText.text = controllerPosition.ToString();
-
+            // Has the right trigger been pressed?
             if (fTRpressed)
             {
-                // ilovejayText.text = "I really love Jay";
                 Vector3 currentPos = GetCurrentReading(right);
-                // marker.transform.position = currentPos;
                 positions.Add(currentPos);
-                // drawing code
             }
 
+            // Has the left trigger been pressed?
             if (fTLpressed)
             {
                 // ilovejayText.text = "I LOVE Jay";
                 Vector3 currentPos = GetCurrentReading(left);
-                // marker.transform.position = currentPos;
                 positions.Add(currentPos);
             }
+
+            // Has A been pressed
+            // Waitcycle is put here so it waits a certain amount of frames
+            // before checking A again, so a bunch of files are not produced
+            // each second
             if (aPressed && (waitcycle == 0))
             {
-                // int letters = letterNum();
-                // ilovejayText.text = $"A pressed?" + letters;
                 LogAttributes();
-                // clear_Screen();
                 waitcycle = 50;
-                // SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             }
 
+            // Has be been pressed
+            // waitcycle here for the same reason
             if (bPressed && (waitcycle == 0))
             {
-                // ilovejayText.text = "B pressed?";
                 LogAttributes();
+
+                /*
+                var notSortedFiles = Directory.GetFiles(uploadFolderPath, "*.csv");
+                Array.Sort(notSortedFiles);
+                var sortedFiles = notSortedFiles.ToList();
+
+                           .OrderBy(filePath => 
+                           {
+                               string fileName = Path.GetFileNameWithoutExtension(filePath);
+                               return int.Parse(new string(fileName.Where(char.IsDigit).ToArray()));
+                           })
+                           .ToList();
+                */
 
                 var sortedFiles = Directory.GetFiles(uploadFolderPath, "*.csv")
                            .OrderBy(filePath => 
@@ -261,29 +248,28 @@ public class Drawing : MonoBehaviour
                                return int.Parse(new string(fileName.Where(char.IsDigit).ToArray()));
                            })
                            .ToList();
+
                 foreach (string uploadFilePath in sortedFiles)
                 {
-                    // ilovejayText.text = uploadFilePath;
                     fileQueue.Enqueue(uploadFilePath);
                 }
                 StartCoroutine(ProcessFiles());
-                // waitcycle = 50;
-                // ilovejayText.text = "B pressed?";
             }
 
-            // erased button
+            // erase button
             if (xPressed)
             {
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             }
 
-            // new word
+            // new word, also deletes the directory
             if (yPressed)
             {
                 Directory.Delete(folderPath, true);
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             }
-
+            
+            // decrements waitcycle
             if (waitcycle > 0)
             {
                 waitcycle -= 1;
@@ -368,128 +354,3 @@ public class Drawing : MonoBehaviour
     }
 }
 
-
-
-
-        /*
-        InputDevice right;
-        float triggerRValue = 0;
-        InputDevice left;
-        float triggerLValue = 0;
-
-        foreach (var dev in devices)
-        {
-            if ((dev.characteristics & rightController) == rightController)
-            {
-                right = dev;
-                right.TryGetFeatureValue(CommonUsages.trigger, out triggerRValue);
-                bool fTRpressed = triggerLValue > 0.05;
-
-                if (fTRpressed)
-                {
-                    ilovejayText.text = "I really love Jay";
-                    positions.Add(GetCurrentReading(right));
-                    // drawing code
-                }
-            }
-            else if ((dev.characteristics & leftController) == leftController)
-            {
-                left = dev;
-                left.TryGetFeatureValue(CommonUsages.trigger, out triggerLValue);
-                bool fTLpressed = triggerLValue > 0.05;
-
-                if (fTLpressed)
-                {
-                    ilovejayText.text = "I love Jay";
-                    positions.Add(GetCurrentReading(left));
-                    // drawing code
-                }
-            }
-        }*/
-
-        //bool fTRpressed = OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch);
-        // bool fTLpressed = OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.LTouch);
-        
-    // }
-
-/*
-    public IEnumerator UploadAndReadFile()
-    {
-        // ilovejayTextGCP.text = "trying to upload";
-        // Upload file
-        try
-        {
-            var credential = GoogleCredential.FromFile(serviceAccountJsonPath);
-            var storageClient = StorageClient.Create(credential);
-
-            using (var fileStream = File.OpenRead(uploadFilePath))
-            {
-                storageClient.UploadObject(bucketName, uploadName, null, fileStream);
-                ilovejayText.text = "Google File uploaded successfully.";
-                lastCheckedTime = DateTime.UtcNow;
-            }
-        }
-        catch (Exception ex)
-        {
-            ilovejayText.text = $"An error occurred: {ex.Message}";
-            yield break; // Stop the coroutine if the upload fails
-        }
-
-        // Read response file
-        StartCoroutine(PollForFileUpdate());
-    }
-
-    IEnumerator PollForFileUpdate()
-    {
-        bool fileUpdated = false;
-
-        while (!fileUpdated)
-        {
-            yield return new WaitForSeconds(1); // Polling interval
-
-            try
-            {
-                var credential = GoogleCredential.FromFile(serviceAccountJsonPath);
-                var storageClient = StorageClient.Create(credential);
-                var obj = storageClient.GetObject(bucketName, responseName);
-
-                if (obj.Updated.HasValue && obj.Updated.Value.ToUniversalTime() > lastCheckedTime)
-                {
-                    fileUpdated = true;
-                    Debug.Log("Response file has been updated.");
-                }
-            }
-            catch (Exception ex)
-            {
-                ilovejayText.text = $"Failed to check file update status: {ex.Message}";
-                yield break;
-            }
-        }
-
-        ReadFile();
-    }
-
-    void ReadFile()
-    {
-        Debug.Log("Reading...");
-        try
-        {
-            var credential = GoogleCredential.FromFile(serviceAccountJsonPath);
-            var storageClient = StorageClient.Create(credential);
-            MemoryStream memoryStream = new MemoryStream();
-
-            storageClient.DownloadObject(bucketName, responseName, memoryStream);
-            memoryStream.Position = 0;
-
-            StreamReader reader = new StreamReader(memoryStream);
-            string fileContents = reader.ReadToEnd();
-
-            // Debug.Log($"Response File Contents: {fileContents}");
-            ilovejayText.text = fileContents;
-        }
-        catch (Exception ex)
-        {
-            ilovejayText.text = $"Failed to download the response file: {ex.Message}";
-        }
-    }
-}*/

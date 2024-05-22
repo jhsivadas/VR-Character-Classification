@@ -7,11 +7,11 @@ using System;
 using System.IO;
 using TMPro;
 
+// Please note, this file is no longer used and has been merged with Drawing
 public class GoogleCloud : MonoBehaviour
 {
+    // variables used throughout the program
     private string bucketName = "digits-vr";
-    // private string uploadName = "sexyjay.csv";
-    // private string uploadName; 
     private string responseName = "response.txt";
     private string uploadName = "positionalData.csv";
     private string uploadFilePath;
@@ -20,6 +20,8 @@ public class GoogleCloud : MonoBehaviour
     public TMP_Text ilovejayTextGCP;
 
 
+    // code to run at the start
+    // 
     void Start()
     {
 
@@ -27,7 +29,6 @@ public class GoogleCloud : MonoBehaviour
         uploadFilePath = Path.Combine(Application.persistentDataPath, uploadName); //Path.Combine(Application.dataPath, uploadName);
 
         ilovejayTextGCP.text = "GCP";
-        // StartCoroutine(UploadAndReadFile(uploadFilePath));
     }
 
     public IEnumerator UploadAndReadFile()

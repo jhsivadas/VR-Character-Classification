@@ -763,7 +763,6 @@ GameObject:
   - component: {fileID: 215816831}
   - component: {fileID: 215816830}
   - component: {fileID: 215816829}
-  - component: {fileID: 215816833}
   m_Layer: 0
   m_Name: Drawing
   m_TagString: Untagged
@@ -851,18 +850,6 @@ Transform:
   m_Father: {fileID: 249530401}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 90, y: 270, z: 0}
---- !u!114 &215816833
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 215816828}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f9090cf0f9ab54dad8ceb0abc7c91012, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &216911928
 GameObject:
   m_ObjectHideFlags: 0
@@ -975,7 +962,6 @@ GameObject:
   - component: {fileID: 223974229}
   - component: {fileID: 223974228}
   - component: {fileID: 223974227}
-  - component: {fileID: 223974232}
   m_Layer: 0
   m_Name: ScriptController
   m_TagString: Untagged
@@ -998,8 +984,6 @@ MonoBehaviour:
   positions: []
   waitcycle: 0
   ilovejayText: {fileID: 625196393}
-  marker: {fileID: 0}
-  renderCamera: {fileID: 0}
 --- !u!65 &223974228
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1078,18 +1062,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &223974232
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 223974226}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f896dd3b4f46e4bbab941548052f4c61, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &249530400
 GameObject:
   m_ObjectHideFlags: 0
