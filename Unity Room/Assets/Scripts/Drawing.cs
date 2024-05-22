@@ -36,13 +36,22 @@ public class Drawing : MonoBehaviour
     // String that denotes the path to the file containing the letter csvs
     private string folderPath;
 
-    // Max?
+    // DateTime that keeps track of the old time of response.txt file on GCP
     private DateTime lastCheckedTime;
 
+    // String that denotes the name of the bucket on GCP
     private string bucketName = "digits-vr";
+    
+    // String that denotes the name of the response file on GCP
     private string responseName = "response.txt";
+
+    // String that denotes the path to the file whose contents will be uploaded to GCP
     private string uploadFolderPath;
+
+    // String that denotes the path to the service account credentials for GCP
     private string serviceAccountJsonPath;
+
+    // ConcurrentQueue that stores the csv files to be uploaded and processed by GCP 
     private ConcurrentQueue<string> fileQueue = new ConcurrentQueue<string>();
 
     // Provides the current position of this device
@@ -228,19 +237,7 @@ public class Drawing : MonoBehaviour
             {
                 LogAttributes();
 
-                /*
-                var notSortedFiles = Directory.GetFiles(uploadFolderPath, "*.csv");
-                Array.Sort(notSortedFiles);
-                var sortedFiles = notSortedFiles.ToList();
-
-                           .OrderBy(filePath => 
-                           {
-                               string fileName = Path.GetFileNameWithoutExtension(filePath);
-                               return int.Parse(new string(fileName.Where(char.IsDigit).ToArray()));
-                           })
-                           .ToList();
-                */
-
+                // sort the files in the correct order before adding to the queue
                 var sortedFiles = Directory.GetFiles(uploadFolderPath, "*.csv")
                            .OrderBy(filePath => 
                            {
@@ -253,6 +250,7 @@ public class Drawing : MonoBehaviour
                 {
                     fileQueue.Enqueue(uploadFilePath);
                 }
+
                 StartCoroutine(ProcessFiles());
             }
 
@@ -277,15 +275,16 @@ public class Drawing : MonoBehaviour
         }
     }
 
+    // start the GCP process for the files in the queue
     IEnumerator ProcessFiles()
     {
-        // ilovejayText.text = fileQueue.Count.ToString();
         while (fileQueue.TryDequeue(out string uploadFilePath))
         {
             yield return StartCoroutine(UploadAndReadFile(uploadFilePath, Path.GetFileName(uploadFilePath)));
         }
     }
 
+    // upload the file to GCP and then read back in the model's response
     IEnumerator UploadAndReadFile(string uploadFilePath, string uploadName)
     {
         try
@@ -293,13 +292,11 @@ public class Drawing : MonoBehaviour
             var credential = GoogleCredential.FromFile(serviceAccountJsonPath);
             var storageClient = StorageClient.Create(credential);
             var obj = storageClient.GetObject(bucketName, responseName);
-            // ilovejayText.text = "upload started";
             lastCheckedTime = obj.Updated.Value.ToUniversalTime();
 
             using (var fileStream = File.OpenRead(uploadFilePath))
             {
                 storageClient.UploadObject(bucketName, uploadName, null, fileStream);
-                // ilovejayText.text = $"{uploadName} uploaded successfully.";
             }
         }
         catch (Exception ex)
@@ -308,10 +305,11 @@ public class Drawing : MonoBehaviour
             yield break;
         }
 
-        // Wait for and read response
+        // read response
         yield return StartCoroutine(WaitAndReadResponse());
     }
 
+    // read the response from GCP with exponential backoff pings
     IEnumerator WaitAndReadResponse()
     {
         bool responseReceived = false;
@@ -353,4 +351,3 @@ public class Drawing : MonoBehaviour
         }
     }
 }
-
