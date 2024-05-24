@@ -238,9 +238,13 @@ public class Drawing : MonoBehaviour
                 LogAttributes();
 
                 // sort the files in the correct order before adding to the queue
-                var preSort = Directory.GetFiles(uploadFolderPath, "*.csv");
-                Array.Sort(preSort);
-                var sortedFiles = preSort.ToList();
+                var sortedFiles = Directory.GetFiles(uploadFolderPath, "*.csv")
+                           .OrderBy(filePath => 
+                           {
+                               string fileName = Path.GetFileNameWithoutExtension(filePath);
+                               return int.Parse(new string(fileName.Where(char.IsDigit).ToArray()));
+                           })
+                           .ToList();
 
                 foreach (string uploadFilePath in sortedFiles)
                 {
